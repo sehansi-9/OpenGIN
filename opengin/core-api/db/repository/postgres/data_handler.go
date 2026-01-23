@@ -14,6 +14,7 @@ import (
 
 	commons "lk/datafoundation/core-api/commons"
 
+	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -393,8 +394,10 @@ func isTypeCompatible(existingType, newType typeinference.DataType) bool {
 
 // handleTabularData processes tabular data attributes
 func (repo *PostgresRepository) HandleTabularData(ctx context.Context, entityID, attrName string, value *pb.TimeBasedValue, schemaInfo *schema.SchemaInfo) error {
-	// Generate table name
-	tableName := fmt.Sprintf("attr_%s_%s", commons.SanitizeIdentifier(entityID), commons.SanitizeIdentifier(attrName))
+	// Generate table name - UUID without hyphens (32 chars) + prefix (5 chars) = 37 chars total
+	unique_id := uuid.New().String()
+	unique_id = strings.ReplaceAll(unique_id, "-", "") // Remove hyphens for PostgreSQL compatibility
+	tableName := fmt.Sprintf("attr_%s", unique_id)
 
 	// Convert schema to columns
 	columns := schemaToColumns(schemaInfo)
