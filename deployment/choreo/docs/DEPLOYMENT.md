@@ -128,3 +128,20 @@ When deploying, edit the `Configurables` as follows:
 - readServicePort: `8081`
 
 > **Warning:** Make sure to disable the auth and security features for the moment as we are keeping APIs open. This configuration is not suitable for production environments.
+
+## Self-Hosted Databases
+
+When deploying custom database containers (like our Postgres or Neo4j images with baked-in data) to Choreo, you may encounter "Read-only file system" errors during startup commands (e.g., `chmod`).
+
+This happens because Choreo (and many Kubernetes environments) may mount the container's root filesystem as read-only, or specific security contexts prevent writing to certain paths.
+
+**Requirement**: You must explicitly mount volumes for the directories that the database needs to write to.
+
+For **Postgres**, the startup script copies baked-in data from `/opt/pgdata` (read-only image layer) to `/tmp/pgdata` at runtime, and uses `/tmp` for the Unix socket. Ensure you add a volume mount for:
+-   `/tmp` — Empty Directory (In-Memory) — runtime data, socket, and pid file
+
+For **Neo4j**, ensure you mount:
+-   `/var/lib/neo4j/`
+-   `/var/log/neo4j/`
+
+These should be configured in the "DevOps" -> "Mounts" section of the Choreo component configuration.
